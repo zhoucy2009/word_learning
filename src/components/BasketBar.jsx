@@ -3,17 +3,31 @@ import {
   addToMistakes,
   addToNotes,
   clearBasket,
+  getDefinitionByToken,
+  getWordDefinition,
   getWordById,
   markInteracted,
   removeFromBasket
 } from "../data/logic.js";
 
-export default function BasketBar({ basketIds, courseId, onUpdate }) {
+export default function BasketBar({ basketIds, courseId, onUpdate, proMode }) {
   const [mode, setMode] = React.useState("en");
   const [translated, setTranslated] = React.useState(false);
 
   const formatLabel = (wordId) =>
     wordId.startsWith("raw:") ? wordId.replace("raw:", "") : wordId;
+
+  const getFallbackDefinition = (wordId) => {
+    if (!wordId.startsWith("raw:")) return null;
+    const token = wordId.replace("raw:", "");
+    return getDefinitionByToken(token, proMode);
+  };
+
+  React.useEffect(() => {
+    if (!basketIds.length) {
+      setTranslated(false);
+    }
+  }, [basketIds]);
 
   const handleTranslate = (nextMode) => {
     if (!basketIds.length) return;
@@ -87,16 +101,22 @@ export default function BasketBar({ basketIds, courseId, onUpdate }) {
           {basketIds.map((wordId) => {
             const word = getWordById(wordId);
             const label = word ? word.lemma : formatLabel(wordId);
+            const fallback = word ? null : getFallbackDefinition(wordId);
             return (
               <div key={wordId} className="card" style={{ padding: 12 }}>
                 <strong>{label}</strong>
                 {word ? (
                   <>
-                    {mode !== "zh" && <div>EN: {word.senses.en}</div>}
-                    {mode !== "en" && <div>ZH: {word.senses.zh}</div>}
+                    {mode !== "zh" && <div>EN: {getWordDefinition(word, proMode).en}</div>}
+                    {mode !== "en" && <div>ZH: {getWordDefinition(word, proMode).zh}</div>}
+                  </>
+                ) : fallback ? (
+                  <>
+                    {mode !== "zh" && <div>EN: {fallback.en}</div>}
+                    {mode !== "en" && <div>ZH: {fallback.zh}</div>}
                   </>
                 ) : (
-                  <div>Definition not seeded yet.</div>
+                  <div>Definition not available.</div>
                 )}
               </div>
             );

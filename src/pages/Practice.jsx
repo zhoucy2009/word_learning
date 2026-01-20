@@ -3,38 +3,44 @@ import { useApp } from "../AppContext.jsx";
 import {
   buildMcqItem,
   buildSpellingItem,
-  getWordById,
+  calculateAbilityUpdate,
   getWordsForCourse,
   recordPractice,
   selectPracticeItems,
   setAbility
 } from "../data/logic.js";
 import { Link } from "react-router-dom";
+import ProgressBar from "../components/ProgressBar.jsx";
 
 export default function Practice() {
   const { state, refresh } = useApp();
   const courseId = state.user.courseId;
   const ability = state.user.abilityByCourse[courseId] || 0;
+  const proMode = state.user.settings.proMode;
   const [items, setItems] = React.useState([]);
   const [answers, setAnswers] = React.useState({});
+  const [checked, setChecked] = React.useState({});
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [startTime, setStartTime] = React.useState(Date.now());
   const [complete, setComplete] = React.useState(false);
   const [summary, setSummary] = React.useState(null);
 
   const buildSession = React.useCallback(() => {
-    const selected = selectPracticeItems(courseId, ability, 5, state);
-    const allWords = getWordsForCourse(courseId);
+    const selected = selectPracticeItems(courseId, ability, 5, state, proMode);
+    const allWords = getWordsForCourse(courseId, { proMode });
     const nextItems = selected.map((word, index) =>
-      index % 2 === 0 ? buildMcqItem(word, allWords) : buildSpellingItem(word)
+      index % 2 === 0
+        ? buildMcqItem(word, allWords, proMode)
+        : buildSpellingItem(word, proMode)
     );
     setItems(nextItems);
     setAnswers({});
+    setChecked({});
     setCurrentIndex(0);
     setStartTime(Date.now());
     setComplete(false);
     setSummary(null);
-  }, [courseId, ability, state]);
+  }, [courseId, ability, state, proMode]);
 
   React.useEffect(() => {
     buildSession();
@@ -42,12 +48,14 @@ export default function Practice() {
 
   const current = items[currentIndex];
   const currentAnswer = answers[currentIndex]?.value;
+  const isChecked = checked[currentIndex];
   const currentCorrect =
-    currentAnswer !== undefined
+    isChecked && currentAnswer !== undefined
       ? current.type === "mcq"
         ? currentAnswer === current.answer
         : currentAnswer.trim().toLowerCase() === current.answer.toLowerCase()
       : null;
+  const checkedCount = Object.values(checked).filter(Boolean).length;
 
   const handleAnswer = (value) => {
     const timeSpent = Date.now() - startTime;
@@ -57,7 +65,13 @@ export default function Practice() {
     }));
   };
 
+  const handleCheck = () => {
+    if (currentAnswer === undefined || currentAnswer === "") return;
+    setChecked((prev) => ({ ...prev, [currentIndex]: true }));
+  };
+
   const handleNext = () => {
+    if (!checked[currentIndex]) return;
     if (currentIndex < items.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setStartTime(Date.now());
@@ -76,15 +90,7 @@ export default function Practice() {
         };
       });
       recordPractice(courseId, items, results);
-      const correctWords = results.filter((result) => result.isCorrect);
-      const avgDifficulty = correctWords.length
-        ? Math.round(
-            correctWords
-              .map((result) => getWordById(result.wordId)?.difficulty || 0)
-              .reduce((sum, value) => sum + value, 0) / correctWords.length
-          )
-        : ability;
-      const nextAbility = Math.round(ability * 0.8 + avgDifficulty * 0.2);
+      const nextAbility = calculateAbilityUpdate(ability, results, proMode);
       setAbility(courseId, nextAbility);
       setSummary({
         total: items.length,
@@ -127,6 +133,7 @@ export default function Practice() {
           Question {currentIndex + 1} / {items.length}
         </span>
       </div>
+      <ProgressBar label="Practice progress" value={checkedCount} total={items.length} />
       <p>{current.prompt}</p>
       {current.type === "mcq" ? (
         <div className="stack">
@@ -137,6 +144,7 @@ export default function Practice() {
                 answers[currentIndex]?.value === option ? "secondary" : "ghost"
               }
               onClick={() => handleAnswer(option)}
+              disabled={isChecked}
             >
               {option}
             </button>
@@ -148,9 +156,10 @@ export default function Practice() {
           placeholder="Type your answer"
           value={answers[currentIndex]?.value || ""}
           onChange={(event) => handleAnswer(event.target.value)}
+          disabled={isChecked}
         />
       )}
-      {currentAnswer !== undefined && (
+      {isChecked && (
         <div className={`notice ${currentCorrect ? "" : "danger-note"}`}>
           {currentCorrect ? "Correct!" : `Incorrect. Correct answer: ${current.answer}`}
         </div>
@@ -159,9 +168,14 @@ export default function Practice() {
         <button className="secondary" onClick={buildSession}>
           Reset
         </button>
-        <button onClick={handleNext}>
-          {currentIndex < items.length - 1 ? "Next" : "Finish"}
-        </button>
+        <div className="flex">
+          <button className="ghost" onClick={handleCheck}>
+            Check
+          </button>
+          <button onClick={handleNext} disabled={!isChecked}>
+            {currentIndex < items.length - 1 ? "Next" : "Finish"}
+          </button>
+        </div>
       </div>
     </div>
   );

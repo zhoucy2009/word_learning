@@ -4,6 +4,16 @@ import { getWordById, removeFromMistakes } from "../data/logic.js";
 
 export default function Mistakes() {
   const { state, refresh } = useApp();
+  const proMode = state.user.settings.proMode;
+
+  if (!proMode) {
+    return (
+      <div className="card stack">
+        <h2>Mistakes (Pro only)</h2>
+        <p>Enable Pro mode to access Mistakes.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="card stack">
