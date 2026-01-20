@@ -6,6 +6,7 @@ import {
   selectReadingPassage
 } from "../data/logic.js";
 import BasketBar from "../components/BasketBar.jsx";
+import ProgressBar from "../components/ProgressBar.jsx";
 
 function splitTokens(text) {
   return text.split(/(\s+|[^A-Za-z']+)/).filter((token) => token !== "");
@@ -19,8 +20,9 @@ export default function Reading() {
   const { state, refresh } = useApp();
   const courseId = state.user.courseId;
   const ability = state.user.abilityByCourse[courseId] || 0;
+  const proMode = state.user.settings.proMode;
   const passage = selectReadingPassage(courseId, ability);
-  const wordsForCourse = getWordsForCourse(courseId);
+  const wordsForCourse = getWordsForCourse(courseId, { proMode });
   const lookup = React.useMemo(() => {
     const map = new Map();
     wordsForCourse.forEach((word) => map.set(word.lemma.toLowerCase(), word.id));
@@ -32,11 +34,14 @@ export default function Reading() {
   }
 
   const tokens = splitTokens(passage.text);
+  const wordTokens = tokens.filter((token) => isWordToken(token));
+  const basketCount = new Set(state.basket).size;
 
   return (
     <div className="stack">
       <div className="card stack">
         <h2>{passage.title}</h2>
+        <ProgressBar label="Reading progress" value={basketCount} total={wordTokens.length} />
         <div className="flex" style={{ flexWrap: "wrap" }}>
           <span className="badge">Source: {passage.sourceLabel}</span>
           <span className="badge">License: {passage.licenseLabel}</span>
@@ -79,7 +84,12 @@ export default function Reading() {
           }
         }}
       >
-        <BasketBar basketIds={state.basket} courseId={courseId} onUpdate={refresh} />
+        <BasketBar
+          basketIds={state.basket}
+          courseId={courseId}
+          onUpdate={refresh}
+          proMode={proMode}
+        />
       </div>
     </div>
   );

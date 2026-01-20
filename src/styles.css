@@ -9,6 +9,9 @@
   --accent-400: #c08c5b;
   --accent-600: #8a5d34;
   --danger-500: #b2433d;
+  --pro-green: #28f37a;
+  --pro-green-soft: rgba(40, 243, 122, 0.35);
+  --pro-metal: #a7adb8;
   font-family: "Inter", system-ui, sans-serif;
 }
 
@@ -31,6 +34,7 @@ a {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background 0.5s ease, color 0.5s ease;
 }
 
 header {
@@ -41,6 +45,7 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  transition: background 0.5s ease, color 0.5s ease;
 }
 
 nav {
@@ -55,6 +60,11 @@ nav a {
 
 nav a:hover {
   opacity: 1;
+}
+
+.nav-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 main {
@@ -139,6 +149,7 @@ button.danger {
   flex-direction: column;
   gap: 12px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
 }
 
 .module h3 {
@@ -251,10 +262,159 @@ header select {
   background: #fff;
 }
 
+header .pro-toggle {
+  white-space: nowrap;
+}
+
+header button.ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
 .notice {
   padding: 12px 16px;
   border-radius: 12px;
   background: var(--neutral-200);
+}
+.app-shell.pro {
+  background: #14171d;
+  color: #e6e7ea;
+  animation: modeSwitch 0.6s ease;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(40, 243, 122, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(40, 243, 122, 0.06), transparent 45%),
+    linear-gradient(180deg, #14171d, #101319);
+}
+
+.app-shell.pro header {
+  background: #181b21;
+  color: #e6e7ea;
+  border-bottom: 1px solid rgba(40, 243, 122, 0.2);
+}
+
+.app-shell.pro header select {
+  background: #1b2028;
+  color: #e6e7ea;
+  border-color: rgba(40, 243, 122, 0.25);
+}
+
+.app-shell.pro main {
+  background: #14171d;
+}
+
+.app-shell.pro .card {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 40%),
+    linear-gradient(135deg, #171b22, #12161c);
+  color: #e6e7ea;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(40, 243, 122, 0.12);
+}
+
+.app-shell.pro .badge {
+  background: #222833;
+  color: #cdd2dc;
+}
+
+.app-shell.pro .module {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 50%),
+    linear-gradient(135deg, #1a1f27, #141821);
+  border: 1px solid rgba(40, 243, 122, 0.18);
+}
+
+.app-shell.pro .module::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 18px;
+  pointer-events: none;
+  box-shadow: inset 0 0 18px rgba(40, 243, 122, 0.08);
+}
+
+.app-shell.pro .notice {
+  background: #1e2430;
+  color: #cdd2dc;
+  border: 1px solid rgba(40, 243, 122, 0.15);
+}
+
+.app-shell.pro .word-chip {
+  background: #1b2028;
+  color: #e6e7ea;
+  border: 1px solid rgba(40, 243, 122, 0.2);
+}
+
+.app-shell.pro button.secondary {
+  background: #2a323d;
+  color: #e6e7ea;
+}
+
+.app-shell.pro button.ghost {
+  color: #e6e7ea;
+  border-color: #4a5568;
+}
+
+.app-shell.pro button {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(135deg, #1b2028, #2c3542);
+  color: #e6e7ea;
+  border: 1px solid rgba(40, 243, 122, 0.35);
+  box-shadow: 0 0 10px rgba(40, 243, 122, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell.pro button:hover {
+  box-shadow: 0 0 18px rgba(40, 243, 122, 0.45), 0 0 40px rgba(40, 243, 122, 0.2);
+  transform: translateY(-2px);
+}
+
+.app-shell.pro header button.pro-toggle {
+  background: linear-gradient(135deg, #0f1419, #1d242d);
+  color: var(--pro-green);
+  border-color: rgba(40, 243, 122, 0.6);
+}
+
+.app-shell.pro .progress-track {
+  background: #202632;
+}
+
+.app-shell.pro .progress-fill {
+  background: linear-gradient(90deg, #1de377, #2cff8f);
+  box-shadow: 0 0 12px rgba(40, 243, 122, 0.5);
+}
+
+.app-shell.pro .badge {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(135deg, #1a1f27, #242a35);
+  border: 1px solid rgba(40, 243, 122, 0.2);
+  color: var(--pro-metal);
+  text-shadow: 0 0 8px rgba(40, 243, 122, 0.2);
+}
+
+@keyframes modeSwitch {
+  from {
+    opacity: 0.6;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.app-shell.pro .flip-face {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.04), transparent 50%),
+    linear-gradient(135deg, #171b22, #10141a);
+  border: 1px solid rgba(40, 243, 122, 0.16);
+}
+
+.app-shell.pro .pro-banner {
+  border: 1px solid rgba(40, 243, 122, 0.3);
+  box-shadow: 0 0 18px rgba(40, 243, 122, 0.25);
 }
 
 .danger-note {
@@ -266,6 +426,32 @@ header select {
 .footer {
   font-size: 0.85rem;
   color: var(--forest-500);
+}
+
+.progress {
+  display: grid;
+  gap: 8px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--forest-700);
+}
+
+.progress-track {
+  background: var(--neutral-200);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-400), var(--forest-500));
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
 @keyframes fadeIn {

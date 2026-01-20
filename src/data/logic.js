@@ -1,4 +1,11 @@
-import { courses, words, passages, courseWordMap } from "./seed.js";
+import {
+  courses,
+  words,
+  passages,
+  courseWordMap,
+  proCourseWordMap,
+  extraDefinitions
+} from "./seed.js";
 import { loadState, saveState } from "./storage.js";
 
 export function getCourses() {
@@ -9,8 +16,11 @@ export function getCourseById(courseId) {
   return courses.find((course) => course.id === courseId) || courses[0];
 }
 
-export function getWordsForCourse(courseId) {
-  const ids = courseWordMap[courseId] || [];
+export function getWordsForCourse(courseId, options = {}) {
+  const { proMode = false } = options;
+  const baseIds = courseWordMap[courseId] || [];
+  const proIds = proCourseWordMap?.[courseId] || [];
+  const ids = proMode ? [...new Set([...baseIds, ...proIds])] : baseIds;
   return words.filter((word) => ids.includes(word.id));
 }
 
@@ -176,16 +186,21 @@ export function estimateVocabSize(abilityRank) {
   return Math.round(abilityRank * 3);
 }
 
-export function selectFlashcardWords(courseId, abilityRank, size, state) {
-  const candidates = getWordsForCourse(courseId)
+export function selectFlashcardWords(courseId, abilityRank, size, state, proMode = false) {
+  const candidates = getWordsForCourse(courseId, { proMode })
     .map((word) => ({ word, state: getWordState(state, courseId, word.id) }))
     .filter((entry) => entry.state.status !== "learned");
-  const filtered = candidates.filter((entry) =>
-    Math.abs(entry.word.difficulty - abilityRank) <= 80
+  const targetWindow = proMode ? 120 : 80;
+  const filtered = candidates.filter(
+    (entry) => Math.abs(entry.word.difficulty - abilityRank) <= targetWindow
   );
   const pool = filtered.length ? filtered : candidates;
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, size).map((entry) => entry.word);
+  const selected = shuffled.slice(0, size).map((entry) => entry.word);
+  if (proMode) {
+    return selected.sort((a, b) => b.difficulty - a.difficulty);
+  }
+  return selected;
 }
 
 export function selectReadingPassage(courseId, abilityRank) {
@@ -197,10 +212,10 @@ export function selectReadingPassage(courseId, abilityRank) {
   return sorted[0];
 }
 
-export function selectPracticeItems(courseId, abilityRank, size, state) {
+export function selectPracticeItems(courseId, abilityRank, size, state, proMode = false) {
   const now = new Date();
   const recentThreshold = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const allWords = getWordsForCourse(courseId);
+  const allWords = getWordsForCourse(courseId, { proMode });
   const candidates = allWords.filter((word) => {
     const entry = getWordState(state, courseId, word.id);
     return entry.status === "interacted" || entry.status === "learned";
@@ -223,15 +238,28 @@ export function selectPracticeItems(courseId, abilityRank, size, state) {
     selected.push(...pick(remaining, size - selected.length));
   }
   if (!selected.length) {
-    const fallback = getWordsForCourse(courseId)
-      .filter((word) => Math.abs(word.difficulty - abilityRank) <= 120)
+    const fallback = getWordsForCourse(courseId, { proMode })
+      .filter((word) => Math.abs(word.difficulty - abilityRank) <= (proMode ? 160 : 120))
       .slice(0, size);
     selected.push(...fallback);
   }
   return selected;
 }
 
-export function buildMcqItem(word, allWords) {
+export function getWordDefinition(word, proMode = false) {
+  if (proMode && word.pro) return word.pro;
+  return word.senses;
+}
+
+export function getDefinitionByToken(token, proMode = false) {
+  const normalized = token.toLowerCase();
+  const match = words.find((word) => word.lemma.toLowerCase() === normalized);
+  if (match) return getWordDefinition(match, proMode);
+  return extraDefinitions[normalized] || null;
+}
+
+export function buildMcqItem(word, allWords, proMode = false) {
+  const definition = getWordDefinition(word, proMode);
   const options = [word];
   const pool = allWords.filter((candidate) => candidate.id !== word.id);
   while (options.length < 4 && pool.length) {
@@ -243,16 +271,37 @@ export function buildMcqItem(word, allWords) {
     type: "mcq",
     wordId: word.id,
     prompt: `Choose the best definition for "${word.lemma}"`,
-    options: shuffled.map((item) => item.senses.en),
-    answer: word.senses.en
+    options: shuffled.map((item) => getWordDefinition(item, proMode).en),
+    answer: definition.en
   };
 }
 
-export function buildSpellingItem(word) {
+export function buildSpellingItem(word, proMode = false) {
+  const definition = getWordDefinition(word, proMode);
   return {
     type: "spelling",
     wordId: word.id,
-    prompt: `Type the word that matches: ${word.senses.en}`,
+    prompt: `Type the word that matches: ${definition.en}`,
     answer: word.lemma
   };
+}
+
+export function calculateAbilityUpdate(currentAbility, results, proMode = false) {
+  if (!results.length) return currentAbility;
+  const correct = results.filter((result) => result.isCorrect);
+  const avgDifficulty = correct.length
+    ? Math.round(
+        correct
+          .map((result) => getWordById(result.wordId)?.difficulty || 0)
+          .reduce((sum, value) => sum + value, 0) / correct.length
+      )
+    : currentAbility;
+  if (!proMode) {
+    return Math.round(currentAbility * 0.8 + avgDifficulty * 0.2);
+  }
+  const accuracy = correct.length / results.length;
+  const avgTime = results.reduce((sum, result) => sum + result.timeSpent, 0) / results.length;
+  const speedBonus = avgTime < 6000 ? 30 : avgTime < 10000 ? 15 : 0;
+  const accuracyBonus = accuracy >= 0.8 ? 40 : accuracy >= 0.6 ? 20 : 0;
+  return Math.round(currentAbility * 0.7 + (avgDifficulty + speedBonus + accuracyBonus) * 0.3);
 }

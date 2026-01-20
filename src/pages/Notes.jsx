@@ -4,6 +4,16 @@ import { getWordById, removeFromNotes } from "../data/logic.js";
 
 export default function Notes() {
   const { state, refresh } = useApp();
+  const proMode = state.user.settings.proMode;
+
+  if (!proMode) {
+    return (
+      <div className="card stack">
+        <h2>Notes (Pro only)</h2>
+        <p>Enable Pro mode to access Notes.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="card stack">

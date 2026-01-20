@@ -9,13 +9,14 @@ export default function Flashcards() {
   const ability = state.user.abilityByCourse[courseId] || 0;
   const sessionSize = state.user.settings.sessionSize;
   const definitionLang = state.user.settings.definitionLang;
+  const proMode = state.user.settings.proMode;
   const [sessionWords, setSessionWords] = React.useState(() =>
-    selectFlashcardWords(courseId, ability, sessionSize, state)
+    selectFlashcardWords(courseId, ability, sessionSize, state, proMode)
   );
 
   React.useEffect(() => {
-    setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state));
-  }, [courseId, ability, sessionSize]);
+    setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state, proMode));
+  }, [courseId, ability, sessionSize, proMode]);
 
   return (
     <div className="stack">
@@ -24,7 +25,7 @@ export default function Flashcards() {
         <button
           className="secondary"
           onClick={() =>
-            setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state))
+            setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state, proMode))
           }
         >
           New Session
@@ -37,8 +38,9 @@ export default function Flashcards() {
         onStateChange={refresh}
         state={state}
         definitionLang={definitionLang}
+        proMode={proMode}
         onRestart={() =>
-          setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state))
+          setSessionWords(selectFlashcardWords(courseId, ability, sessionSize, state, proMode))
         }
       />
       <div className="notice">

@@ -8,6 +8,7 @@ export default function Home() {
   const course = getCourseById(state.user.courseId);
   const ability = state.user.abilityByCourse[state.user.courseId] || 0;
   const progress = getDailyProgress(state, state.user.courseId);
+  const proMode = state.user.settings.proMode;
 
   return (
     <div className="stack">
@@ -46,6 +47,16 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {proMode && (
+        <div className="card pro-banner">
+          <h3>Pro mode engaged</h3>
+          <p>
+            Advanced vocabulary is now blended into sessions, and your ability updates
+            consider accuracy and speed for smarter level analysis.
+          </p>
+        </div>
+      )}
 
       <div className="card footer">
         <p>

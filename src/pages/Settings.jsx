@@ -11,11 +11,12 @@ export default function Settings() {
     state.user.settings.definitionLang
   );
   const [courseId, setCourseId] = React.useState(state.user.courseId);
+  const [proMode, setProMode] = React.useState(state.user.settings.proMode);
   const courses = getCourses();
 
   const handleSave = () => {
     const normalizedSize = Math.min(20, Math.max(5, Number(sessionSize)));
-    setSettings({ sessionSize: normalizedSize, definitionLang });
+    setSettings({ sessionSize: normalizedSize, definitionLang, proMode });
     if (courseId !== state.user.courseId) {
       setCourse(courseId);
     }
@@ -54,6 +55,13 @@ export default function Settings() {
           <option value="en">English</option>
           <option value="zh">Chinese</option>
           <option value="both">English + Chinese</option>
+        </select>
+      </label>
+      <label className="stack">
+        Pro mode
+        <select value={proMode ? "on" : "off"} onChange={(event) => setProMode(event.target.value === "on")}>
+          <option value="off">Off</option>
+          <option value="on">On</option>
         </select>
       </label>
       <button onClick={handleSave}>Save settings</button>

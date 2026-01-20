@@ -161,3 +161,20 @@ Updates based on Version 2 feedback:
 4. Basket translation now displays meanings; for unseeded words it shows a fallback “Definition not seeded yet.”
 5. Practice now gives per-question feedback and a final score summary with exit option.
 6. Added smoother animations and hover transitions for cards/modules/basket/buttons.
+Feedbacks:
+- translators in paragraph reading is still not working, no results displayed
+- At spelling and MCQ tasks, set two buttons: check and next, do not auto check, wait for the user to click check, before that, users can make changes. Avoid the error: user only input one letter, and judged as wrong and give out the right answer. 
+- Add process bars with percentages for all tasks
+
+Version 4 (2026.1.19 21:48)
+- Add "Pro" mode, can be switch on and off manually. 
+- Pro mode offers more advanced word, more professional meanings, and more intelegent dynamic analysis of user's habit, and english level
+- UI and background are black/grey, make the overall style professional and advanced.
+- Add an animation switching between normal mode and pro mode
+
+Updates for Version 3 feedback + Version 4 tasks:
+- Reading translation fixed: basket now renders definitions reliably; unseeded words show a fallback message.
+- Practice flow updated: separate Check / Next buttons, no auto-check before user confirms.
+- Progress bars added for Flashcards, Reading, and Practice with percentages.
+- Pro mode added with toggle (header + Settings), advanced words, pro definitions, and smarter ability update.
+- Pro mode styling uses black/grey theme with smooth mode-switch animation.

@@ -13,7 +13,8 @@ const defaultState = {
     },
     settings: {
       sessionSize: 5,
-      definitionLang: "en"
+      definitionLang: "en",
+      proMode: false
     },
     lastActiveDate: null
   },

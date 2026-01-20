@@ -2,11 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   getWordState,
+  getWordDefinition,
   markInteracted,
   markLearned,
   updateState,
   updateWordState
 } from "../data/logic.js";
+import ProgressBar from "./ProgressBar.jsx";
 
 export default function FlashcardDeck({
   words,
@@ -15,7 +17,8 @@ export default function FlashcardDeck({
   onStateChange,
   state,
   definitionLang,
-  onRestart
+  onRestart,
+  proMode
 }) {
   const [index, setIndex] = React.useState(0);
   const [flipped, setFlipped] = React.useState(false);
@@ -23,6 +26,7 @@ export default function FlashcardDeck({
   const [sessionWords, setSessionWords] = React.useState(words);
   const [learnedCount, setLearnedCount] = React.useState(0);
   const [flipCount, setFlipCount] = React.useState(0);
+  const [initialCount, setInitialCount] = React.useState(words.length);
 
   React.useEffect(() => {
     setSessionWords(words);
@@ -31,9 +35,13 @@ export default function FlashcardDeck({
     setHistory([]);
     setLearnedCount(0);
     setFlipCount(0);
+    setInitialCount(words.length);
   }, [words]);
 
   const current = sessionWords[index];
+  const progressValue = current
+    ? Math.min(initialCount, learnedCount + index)
+    : initialCount;
 
   const handleFlip = () => {
     if (!current) return;
@@ -134,6 +142,7 @@ export default function FlashcardDeck({
           Previous
         </button>
       </div>
+      <ProgressBar label="Session progress" value={progressValue} total={initialCount} />
 
       <div className="flip-card" onClick={handleFlip}>
         <div className={`flip-inner ${flipped ? "flipped" : ""}`}>
@@ -142,8 +151,12 @@ export default function FlashcardDeck({
             <p>{current.phonetics}</p>
           </div>
           <div className="flip-face flip-back">
-            {definitionLang !== "zh" && <h3>EN: {current.senses.en}</h3>}
-            {definitionLang !== "en" && <h3>ZH: {current.senses.zh}</h3>}
+            {definitionLang !== "zh" && (
+              <h3>EN: {getWordDefinition(current, proMode).en}</h3>
+            )}
+            {definitionLang !== "en" && (
+              <h3>ZH: {getWordDefinition(current, proMode).zh}</h3>
+            )}
             <p>{current.example}</p>
           </div>
         </div>
